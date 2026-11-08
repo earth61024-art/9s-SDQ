@@ -1,5 +1,5 @@
-import React from 'react';
-import { Student, Assessment9S, AssessmentSDQ, ClassroomGrade, AcademicSemester } from '../types';
+import { Student, Assessment9S, AssessmentSDQ, ClassroomGrade, AcademicSemester, AppUser } from '../types';
+import { User } from 'firebase/auth';
 import { SchoolLogo } from './SchoolLogo';
 import {
   Users,
@@ -13,6 +13,7 @@ import {
   Sparkles,
   School,
   Upload,
+  LogIn,
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -26,6 +27,8 @@ interface DashboardViewProps {
   onOpenSDQ: (student: Student) => void;
   onPrintSchoolSummary: () => void;
   onOpenImportModal: () => void;
+  currentUser?: AppUser | User | null;
+  onOpenAuthModal?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -39,6 +42,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenSDQ,
   onPrintSchoolSummary,
   onOpenImportModal,
+  currentUser,
+  onOpenAuthModal,
 }) => {
   const totalStudents = students.length;
   const screened9SStudents = students.filter((s) => screenings9S[s.id]);
@@ -117,6 +122,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Decorative background shape */}
         <div className="absolute right-[-40px] bottom-[-40px] w-64 h-64 rounded-full bg-teal-500/15 blur-2xl pointer-events-none" />
       </div>
+
+      {/* Guest / Email Sign-in Prompt Banner */}
+      {!currentUser && onOpenAuthModal && (
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-teal-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-teal-50/60 to-white">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[#0f2b48] text-teal-300 flex items-center justify-center shrink-0 shadow-xs">
+              <LogIn className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                เข้าสู่ระบบ WMA CARE (อีเมล / บัญชี Google)
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                ลงชื่อเข้าใช้งานด้วยอีเมลของคุณเพื่อเปิดใช้งานระบบซิงค์คลาวด์สด (Firebase) และส่งออก Google Sheets
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenAuthModal}
+            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-xs transition cursor-pointer shrink-0"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>เข้าสู่ระบบด้วยอีเมล / Google</span>
+          </button>
+        </div>
+      )}
 
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

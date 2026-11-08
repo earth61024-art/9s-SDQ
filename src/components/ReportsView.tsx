@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Student, Assessment9S, AssessmentSDQ, ClassroomGrade, AcademicSemester } from '../types';
+import { Student, Assessment9S, AssessmentSDQ, ClassroomGrade, AcademicSemester, AppUser } from '../types';
 import { exportToGoogleSheets, saveSummaryReportToDrive } from '../services/workspaceService';
 import { hasAccessToken } from '../services/firebaseAuth';
 import { User } from 'firebase/auth';
@@ -23,8 +23,9 @@ interface ReportsViewProps {
   students: Student[];
   screenings9S: Record<string, Assessment9S>;
   assessmentsSDQ: Record<string, AssessmentSDQ>;
-  currentUser: User | null;
+  currentUser: AppUser | User | null;
   onSignInWithGoogle: () => void;
+  onOpenAuthModal?: () => void;
   onPrintClassroom: (classroom: ClassroomGrade) => void;
   onPrintSchoolSummary: () => void;
   onConfirmModal: (opts: {
@@ -43,6 +44,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   assessmentsSDQ,
   currentUser,
   onSignInWithGoogle,
+  onOpenAuthModal,
   onPrintClassroom,
   onPrintSchoolSummary,
   onConfirmModal,
@@ -60,7 +62,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
 
   const handleExportSheets = () => {
     if (!currentUser) {
-      onSignInWithGoogle();
+      if (onOpenAuthModal) onOpenAuthModal();
+      else onSignInWithGoogle();
       return;
     }
 
@@ -101,7 +104,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
 
   const handleSaveToDrive = () => {
     if (!currentUser) {
-      onSignInWithGoogle();
+      if (onOpenAuthModal) onOpenAuthModal();
+      else onSignInWithGoogle();
       return;
     }
 

@@ -2,6 +2,14 @@ export type ClassroomGrade = 'ป.1' | 'ป.2' | 'ป.3' | 'ป.4' | 'ป.5' | '
 
 export type AcademicSemester = '1' | '2';
 
+export interface AppUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL?: string | null;
+  emailVerified?: boolean;
+}
+
 export interface Student {
   id: string;
   studentCode: string; // เลขประจำตัว

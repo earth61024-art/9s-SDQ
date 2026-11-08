@@ -5,9 +5,10 @@ import {
   AssessmentSDQ,
   ClassroomGrade,
   AcademicSemester,
+  AppUser,
 } from './types';
 import { INITIAL_STUDENTS_2569 } from './data/initialStudents';
-import { initAuth, googleSignIn, logout } from './services/firebaseAuth';
+import { initAuth, googleSignIn, emailSignIn, logout } from './services/firebaseAuth';
 import { User } from 'firebase/auth';
 import { Navbar, ActiveTab } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
@@ -19,6 +20,7 @@ import { SDQModal } from './components/SDQModal';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { PrintView, PrintMode } from './components/PrintView';
 import { ImportStudentsModal } from './components/ImportStudentsModal';
+import { AuthModal } from './components/AuthModal';
 import {
   saveUserProfile,
   saveStudentToFirestore,
@@ -165,8 +167,9 @@ export default function App() {
   const currentSDQAssessments = assessmentsSDQByPeriod[currentPeriodKey] || {};
 
   // Firebase Auth State
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | User | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Modals State
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
@@ -304,11 +307,14 @@ export default function App() {
       if (res) {
         setCurrentUser(res.user);
       }
-    } catch (err: any) {
-      console.error('Sign in error', err);
     } finally {
       setIsLoggingIn(false);
     }
+  };
+
+  const handleEmailSignIn = (email: string, displayName?: string) => {
+    const user = emailSignIn(email, displayName);
+    setCurrentUser(user);
   };
 
   const handleSignOutGoogle = async () => {
@@ -570,7 +576,7 @@ export default function App() {
         semester={semester}
         setSemester={setSemester}
         currentUser={currentUser}
-        onSignInWithGoogle={handleSignInGoogle}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onSignOut={handleSignOutGoogle}
         isLoggingIn={isLoggingIn}
         onOpenImportModal={() => setIsImportModalOpen(true)}
@@ -599,6 +605,8 @@ export default function App() {
             }}
             onPrintSchoolSummary={handlePrintSchoolSummary}
             onOpenImportModal={() => setIsImportModalOpen(true)}
+            currentUser={currentUser}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
           />
         )}
 
@@ -641,6 +649,7 @@ export default function App() {
             assessmentsSDQ={currentSDQAssessments}
             currentUser={currentUser}
             onSignInWithGoogle={handleSignInGoogle}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
             onPrintClassroom={handlePrintClassroomSummary}
             onPrintSchoolSummary={handlePrintSchoolSummary}
             onConfirmModal={(opts) => {
@@ -753,6 +762,15 @@ export default function App() {
           onClose={() => setPrintState((prev) => ({ ...prev, isOpen: false }))}
         />
       )}
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onGoogleSignIn={handleSignInGoogle}
+        onEmailSignIn={handleEmailSignIn}
+        isLoggingIn={isLoggingIn}
+      />
 
       {/* Confirmation Modal */}
       <ConfirmationModal
