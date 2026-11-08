@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Student, Assessment9S, AssessmentSDQ, ClassroomGrade, AcademicSemester } from '../types';
 import { exportToGoogleSheets, saveSummaryReportToDrive } from '../services/workspaceService';
+import { hasAccessToken } from '../services/firebaseAuth';
 import { User } from 'firebase/auth';
 import {
   FileSpreadsheet,
@@ -63,9 +64,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       return;
     }
 
+    const modalMsg = hasAccessToken()
+      ? `ระบบจะสร้าง Google Sheet ใหม่ชื่อ "WMA CARE - สรุปผลคัดกรอง 9S & SDQ ปีการศึกษา ${academicYear} ภาคเรียนที่ ${semester}" ใน Google Drive บัญชี ${currentUser.email} พร้อมข้อมูลนักเรียนและการประเมินทั้งหมด (${students.length} รายการ)`
+      : `ระบบจะขอสิทธิ์เข้าถึง Google Workspace ในบัญชี ${currentUser.email} เพื่อสร้าง Google Sheet สรุปผลคัดกรอง 9S & SDQ ปีการศึกษา ${academicYear} ภาคเรียนที่ ${semester}`;
+
     onConfirmModal({
       title: 'สร้าง Google Spreadsheet ใหม่ในบัญชีของคุณ?',
-      message: `ระบบจะสร้าง Google Sheet ใหม่ชื่อ "WMA CARE - สรุปผลคัดกรอง 9S & SDQ ปีการศึกษา ${academicYear} ภาคเรียนที่ ${semester}" ใน Google Drive บัญชี ${currentUser.email} พร้อมข้อมูลนักเรียนและการประเมินทั้งหมด (${students.length} รายการ)`,
+      message: modalMsg,
       variant: 'primary',
       onConfirm: async () => {
         setIsExportingSheets(true);
@@ -82,10 +87,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           if (res.success && res.spreadsheetUrl) {
             setSheetsResultUrl(res.spreadsheetUrl);
             setStatusMessage('ส่งออกไปยัง Google Sheets เรียบร้อยแล้ว!');
+          } else {
+            setErrorMessage(res.error || 'ไม่สามารถส่งออก Google Sheets ได้');
           }
         } catch (err: any) {
-          console.error(err);
-          setErrorMessage(err.message || 'เกิดข้อผิดพลาดในการส่งออก Google Sheets');
+          setErrorMessage(err?.message || 'เกิดข้อผิดพลาดในการส่งออก Google Sheets');
         } finally {
           setIsExportingSheets(false);
         }
@@ -125,9 +131,13 @@ ${classList
   .join('\n')}
 `;
 
+    const driveModalMsg = hasAccessToken()
+      ? `ระบบจะบันทึกไฟล์ข้อความสรุปผลภาพรวม "WMA_CARE_รายงานสรุป_ปีการศึกษา_${academicYear}_ภาคเรียนที่_${semester}.txt" ลงใน Google Drive ของบัญชี ${currentUser.email}`
+      : `ระบบจะขอสิทธิ์เข้าถึง Google Drive ในบัญชี ${currentUser.email} เพื่อบันทึกรายงานสรุปผล`;
+
     onConfirmModal({
       title: 'บันทึกไฟล์รายงานสรุปไปยัง Google Drive?',
-      message: `ระบบจะบันทึกไฟล์ข้อความสรุปผลภาพรวม "WMA_CARE_รายงานสรุป_ปีการศึกษา_${academicYear}_ภาคเรียนที่_${semester}.txt" ลงใน Google Drive ของบัญชี ${currentUser.email}`,
+      message: driveModalMsg,
       variant: 'primary',
       onConfirm: async () => {
         setIsSavingDrive(true);
@@ -143,10 +153,11 @@ ${classList
           if (res.success && res.webViewLink) {
             setDriveResultLink(res.webViewLink);
             setStatusMessage('บันทึกรายงานลง Google Drive เรียบร้อยแล้ว!');
+          } else {
+            setErrorMessage(res.error || 'ไม่สามารถบันทึก Google Drive ได้');
           }
         } catch (err: any) {
-          console.error(err);
-          setErrorMessage(err.message || 'เกิดข้อผิดพลาดในการบันทึก Google Drive');
+          setErrorMessage(err?.message || 'เกิดข้อผิดพลาดในการบันทึก Google Drive');
         } finally {
           setIsSavingDrive(false);
         }
@@ -255,9 +266,11 @@ ${classList
                 <>
                   <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
                   <span>
-                    {currentUser
-                      ? 'ส่งออกข้อมูลไปยัง Google Sheets ทันที'
-                      : 'ลงชื่อเข้าใช้ Google เพื่อส่งออก Sheets'}
+                    {!currentUser
+                      ? 'ลงชื่อเข้าใช้ Google เพื่อส่งออก Sheets'
+                      : !hasAccessToken()
+                      ? 'เชื่อมต่อสิทธิ์ Google และส่งออก Sheets'
+                      : 'ส่งออกข้อมูลไปยัง Google Sheets ทันที'}
                   </span>
                 </>
               )}
@@ -307,9 +320,11 @@ ${classList
                 <>
                   <HardDrive className="w-4 h-4 text-white" />
                   <span>
-                    {currentUser
-                      ? 'บันทึกรายงานสรุปลง Google Drive'
-                      : 'ลงชื่อเข้าใช้ Google เพื่อบันทึกลง Drive'}
+                    {!currentUser
+                      ? 'ลงชื่อเข้าใช้ Google เพื่อบันทึกลง Drive'
+                      : !hasAccessToken()
+                      ? 'เชื่อมต่อสิทธิ์ Google และบันทึก Drive'
+                      : 'บันทึกรายงานสรุปลง Google Drive'}
                   </span>
                 </>
               )}

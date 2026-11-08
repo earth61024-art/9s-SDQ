@@ -67,6 +67,25 @@ export const getAccessToken = async (): Promise<string | null> => {
   return cachedAccessToken;
 };
 
+export const hasAccessToken = (): boolean => {
+  return !!cachedAccessToken;
+};
+
+export const ensureAccessToken = async (): Promise<string | null> => {
+  if (cachedAccessToken) {
+    return cachedAccessToken;
+  }
+  try {
+    const res = await googleSignIn();
+    return res?.accessToken || null;
+  } catch (err: any) {
+    if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+      return null;
+    }
+    return null;
+  }
+};
+
 export const getCurrentUser = (): User | null => {
   return cachedUser;
 };

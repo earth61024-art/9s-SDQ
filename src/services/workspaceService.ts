@@ -1,5 +1,5 @@
 import { Student, Assessment9S, AssessmentSDQ, AcademicSemester } from '../types';
-import { getAccessToken } from './firebaseAuth';
+import { getAccessToken, ensureAccessToken } from './firebaseAuth';
 import { formatToThaiDate } from '../utils/thaiDate';
 
 export interface ExportResult {
@@ -17,35 +17,67 @@ export async function exportToGoogleSheets(
   screenings9S: Record<string, Assessment9S>,
   assessmentsSDQ: Record<string, AssessmentSDQ>
 ): Promise<ExportResult> {
-  const token = await getAccessToken();
+  let token = await getAccessToken();
   if (!token) {
-    throw new Error('กรุณาลงชื่อเข้าใช้ด้วยบัญชี Google ก่อนส่งออกข้อมูล');
+    token = await ensureAccessToken();
   }
 
-  // 1. Create Spreadsheet
-  const title = `WMA CARE - สรุปผลคัดกรอง 9S & SDQ ปีการศึกษา ${academicYear} ภาคเรียนที่ ${semester} (โรงเรียนวัดใหม่อมตรส)`;
-  const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      properties: {
-        title,
+  if (!token) {
+    return {
+      success: false,
+      error: 'กรุณาลงชื่อเข้าใช้ด้วยบัญชี Google เพื่อให้สิทธิ์เข้าถึง Google Sheets & Drive',
+    };
+  }
+
+  try {
+    // 1. Create Spreadsheet
+    const title = `WMA CARE - สรุปผลคัดกรอง 9S & SDQ ปีการศึกษา ${academicYear} ภาคเรียนที่ ${semester} (โรงเรียนวัดใหม่อมตรส)`;
+    let createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-      sheets: [
-        { properties: { title: 'ภาพรวมรายชื่อนักเรียน' } },
-        { properties: { title: 'ผลการคัดกรอง 9S (HERO)' } },
-        { properties: { title: 'ผลการประเมิน SDQ' } },
-      ],
-    }),
-  });
+      body: JSON.stringify({
+        properties: {
+          title,
+        },
+        sheets: [
+          { properties: { title: 'ภาพรวมรายชื่อนักเรียน' } },
+          { properties: { title: 'ผลการคัดกรอง 9S (HERO)' } },
+          { properties: { title: 'ผลการประเมิน SDQ' } },
+        ],
+      }),
+    });
 
-  if (!createRes.ok) {
-    const errData = await createRes.json();
-    throw new Error(errData?.error?.message || 'ไม่สามารถสร้าง Google Sheets ได้');
-  }
+    if (createRes.status === 401) {
+      token = await ensureAccessToken();
+      if (token) {
+        createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            properties: { title },
+            sheets: [
+              { properties: { title: 'ภาพรวมรายชื่อนักเรียน' } },
+              { properties: { title: 'ผลการคัดกรอง 9S (HERO)' } },
+              { properties: { title: 'ผลการประเมิน SDQ' } },
+            ],
+          }),
+        });
+      }
+    }
+
+    if (!createRes.ok) {
+      const errData = await createRes.json().catch(() => ({}));
+      return {
+        success: false,
+        error: errData?.error?.message || 'ไม่สามารถสร้าง Google Sheets ได้ กรุณาตรวจสอบสิทธิ์บัญชี Google',
+      };
+    }
 
   const createdSheet = await createRes.json();
   const spreadsheetId = createdSheet.spreadsheetId;
@@ -250,8 +282,11 @@ export async function exportToGoogleSheets(
   );
 
   if (!batchRes.ok) {
-    const err = await batchRes.json();
-    throw new Error(err?.error?.message || 'บันทึกข้อมูลลง Google Sheets ล้มเหลว');
+    const err = await batchRes.json().catch(() => ({}));
+    return {
+      success: false,
+      error: err?.error?.message || 'บันทึกข้อมูลลง Google Sheets ล้มเหลว',
+    };
   }
 
   return {
@@ -259,6 +294,12 @@ export async function exportToGoogleSheets(
     fileId: spreadsheetId,
     spreadsheetUrl,
   };
+} catch (err: any) {
+  return {
+    success: false,
+    error: err?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets API',
+  };
+}
 }
 
 export async function saveSummaryReportToDrive(
@@ -267,44 +308,77 @@ export async function saveSummaryReportToDrive(
   reportTitle: string,
   reportTextContent: string
 ): Promise<ExportResult> {
-  const token = await getAccessToken();
+  let token = await getAccessToken();
   if (!token) {
-    throw new Error('กรุณาลงชื่อเข้าใช้ด้วยบัญชี Google ก่อนส่งออกไฟล์');
+    token = await ensureAccessToken();
   }
 
-  const fileName = `${reportTitle}_ปีการศึกษา_${academicYear}_ภาคเรียนที่_${semester}.txt`;
-  const metadata = {
-    name: fileName,
-    mimeType: 'text/plain',
-  };
+  if (!token) {
+    return {
+      success: false,
+      error: 'กรุณาลงชื่อเข้าใช้ด้วยบัญชี Google เพื่อให้สิทธิ์เข้าถึง Google Drive',
+    };
+  }
 
-  const form = new FormData();
-  form.append(
-    'metadata',
-    new Blob([JSON.stringify(metadata)], { type: 'application/json' })
-  );
-  form.append('file', new Blob([reportTextContent], { type: 'text/plain;charset=utf-8' }));
+  try {
+    const fileName = `${reportTitle}_ปีการศึกษา_${academicYear}_ภาคเรียนที่_${semester}.txt`;
+    const metadata = {
+      name: fileName,
+      mimeType: 'text/plain',
+    };
 
-  const res = await fetch(
-    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: form,
+    const form = new FormData();
+    form.append(
+      'metadata',
+      new Blob([JSON.stringify(metadata)], { type: 'application/json' })
+    );
+    form.append('file', new Blob([reportTextContent], { type: 'text/plain;charset=utf-8' }));
+
+    let res = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: form,
+      }
+    );
+
+    if (res.status === 401) {
+      token = await ensureAccessToken();
+      if (token) {
+        res = await fetch(
+          'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: form,
+          }
+        );
+      }
     }
-  );
 
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err?.error?.message || 'บันทึกรายงานลง Google Drive ล้มเหลว');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return {
+        success: false,
+        error: err?.error?.message || 'บันทึกรายงานลง Google Drive ล้มเหลว',
+      };
+    }
+
+    const driveFile = await res.json();
+    return {
+      success: true,
+      fileId: driveFile.id,
+      webViewLink: driveFile.webViewLink,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || 'เกิดข้อผิดพลาดในการบันทึกรายงานลง Google Drive',
+    };
   }
-
-  const driveFile = await res.json();
-  return {
-    success: true,
-    fileId: driveFile.id,
-    webViewLink: driveFile.webViewLink,
-  };
 }
