@@ -1,0 +1,376 @@
+{
+  "entities": {
+    "Admin": {
+      "title": "Admin",
+      "description": "Administrator membership document for authorized school staff",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Google email of administrator",
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "description": "System role",
+          "enum": ["admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp in ISO format"
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Teacher and staff user profiles",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of teacher or staff",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of teacher or staff",
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of user",
+          "enum": ["admin", "teacher"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "AcademicPeriod": {
+      "title": "AcademicPeriod",
+      "description": "Metadata for academic year and semester period (e.g. 2569_1)",
+      "type": "object",
+      "properties": {
+        "periodKey": {
+          "type": "string",
+          "description": "Composite period key (e.g. 2569_1)",
+          "maxLength": 32,
+          "pattern": "^[0-9]{4}_[1-2]$"
+        },
+        "academicYear": {
+          "type": "string",
+          "description": "Thai Buddhist academic year (e.g. 2569)",
+          "maxLength": 8
+        },
+        "semester": {
+          "type": "string",
+          "description": "Semester number",
+          "enum": ["1", "2"]
+        },
+        "studentCount": {
+          "type": "number",
+          "description": "Number of students enrolled in this period"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of last modification"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "UID of teacher who updated"
+        }
+      },
+      "required": ["periodKey", "academicYear", "semester"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student record for a specific academic period",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique student identifier",
+          "maxLength": 64
+        },
+        "periodKey": {
+          "type": "string",
+          "description": "Composite period key",
+          "maxLength": 32
+        },
+        "studentCode": {
+          "type": "string",
+          "description": "School student code",
+          "maxLength": 32
+        },
+        "nationalId": {
+          "type": "string",
+          "description": "National ID number (13 digits or formatted)",
+          "maxLength": 32
+        },
+        "orderNo": {
+          "type": "number",
+          "description": "Class roll order number"
+        },
+        "name": {
+          "type": "string",
+          "description": "Student full name and title",
+          "maxLength": 200
+        },
+        "classroom": {
+          "type": "string",
+          "description": "Grade classroom",
+          "enum": ["ป.1", "ป.2", "ป.3", "ป.4", "ป.5", "ป.6"]
+        },
+        "birthdate": {
+          "type": "string",
+          "description": "Thai birth date string or formatted date",
+          "maxLength": 64
+        },
+        "gender": {
+          "type": "string",
+          "description": "Student gender",
+          "enum": ["ชาย", "หญิง"]
+        },
+        "academicYear": {
+          "type": "string",
+          "description": "Academic year",
+          "maxLength": 8
+        },
+        "semester": {
+          "type": "string",
+          "description": "Semester",
+          "enum": ["1", "2"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of update"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "UID of updater"
+        }
+      },
+      "required": ["id", "studentCode", "name", "classroom", "periodKey"]
+    },
+    "Assessment9S": {
+      "title": "Assessment9S",
+      "description": "School Health HERO 9S screening record",
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "description": "ID of student screened",
+          "maxLength": 64
+        },
+        "periodKey": {
+          "type": "string",
+          "description": "Period key",
+          "maxLength": 32
+        },
+        "academicYear": {
+          "type": "string",
+          "description": "Academic year",
+          "maxLength": 8
+        },
+        "semester": {
+          "type": "string",
+          "description": "Semester",
+          "enum": ["1", "2"]
+        },
+        "answers": {
+          "type": "object",
+          "description": "Answers to the 9 questions (boolean values)"
+        },
+        "behavioralPositive": {
+          "type": "boolean",
+          "description": "Hyperactivity/inattention screening result"
+        },
+        "emotionalPositive": {
+          "type": "boolean",
+          "description": "Emotional/anxiety screening result"
+        },
+        "socialPositive": {
+          "type": "boolean",
+          "description": "Bullying/social screening result"
+        },
+        "overallPositive": {
+          "type": "boolean",
+          "description": "True if any symptom group is positive (triggering SDQ)"
+        },
+        "assessmentDate": {
+          "type": "string",
+          "description": "Date of assessment (YYYY-MM-DD)",
+          "maxLength": 16
+        },
+        "assessmentTime": {
+          "type": "string",
+          "description": "Time of assessment (HH:MM)",
+          "maxLength": 16
+        },
+        "assessorName": {
+          "type": "string",
+          "description": "Name of observing teacher",
+          "maxLength": 200
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional teacher observations",
+          "maxLength": 1000
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of update"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "UID of updater"
+        }
+      },
+      "required": ["studentId", "periodKey", "assessmentDate", "overallPositive"]
+    },
+    "AssessmentSDQ": {
+      "title": "AssessmentSDQ",
+      "description": "Strengths and Difficulties Questionnaire (SDQ) assessment record",
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "description": "ID of student evaluated",
+          "maxLength": 64
+        },
+        "periodKey": {
+          "type": "string",
+          "description": "Period key",
+          "maxLength": 32
+        },
+        "academicYear": {
+          "type": "string",
+          "description": "Academic year",
+          "maxLength": 8
+        },
+        "semester": {
+          "type": "string",
+          "description": "Semester",
+          "enum": ["1", "2"]
+        },
+        "assessorType": {
+          "type": "string",
+          "description": "Respondent role",
+          "enum": ["teacher", "student", "parent"]
+        },
+        "answers": {
+          "type": "object",
+          "description": "Item responses 1-25 with values 0, 1, or 2"
+        },
+        "emotionalScore": {
+          "type": "number",
+          "description": "Emotional problems subscore (0-10)"
+        },
+        "conductScore": {
+          "type": "number",
+          "description": "Conduct problems subscore (0-10)"
+        },
+        "hyperactivityScore": {
+          "type": "number",
+          "description": "Hyperactivity-inattention subscore (0-10)"
+        },
+        "peerScore": {
+          "type": "number",
+          "description": "Peer problems subscore (0-10)"
+        },
+        "prosocialScore": {
+          "type": "number",
+          "description": "Prosocial behavior subscore (0-10)"
+        },
+        "totalDifficulties": {
+          "type": "number",
+          "description": "Total difficulties score across 4 deficit subscales (0-40)"
+        },
+        "totalStatus": {
+          "type": "string",
+          "description": "Categorical interpretation of total difficulties",
+          "enum": ["normal", "risk", "problem"]
+        },
+        "prosocialStatus": {
+          "type": "string",
+          "description": "Categorical interpretation of prosocial behavior",
+          "enum": ["strength", "no_strength"]
+        },
+        "assessmentDate": {
+          "type": "string",
+          "description": "Date of assessment (YYYY-MM-DD)",
+          "maxLength": 16
+        },
+        "assessmentTime": {
+          "type": "string",
+          "description": "Time of assessment (HH:MM)",
+          "maxLength": 16
+        },
+        "assessorName": {
+          "type": "string",
+          "description": "Name of assessor",
+          "maxLength": 200
+        },
+        "impactDifficulties": {
+          "type": "string",
+          "description": "Impact supplement difficulty perception"
+        },
+        "impactDuration": {
+          "type": "string",
+          "description": "Impact supplement duration"
+        },
+        "impactDistress": {
+          "type": "string",
+          "description": "Impact supplement upset/distress rating"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of update"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "UID of updater"
+        }
+      },
+      "required": ["studentId", "periodKey", "assessorType", "totalDifficulties", "totalStatus"]
+    }
+  },
+  "firestore": {
+    "/admins/{userId}": {
+      "schema": "Admin",
+      "description": "Authoritative list of school system administrators"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Registered school teacher and staff profiles"
+    },
+    "/periods/{periodKey}": {
+      "schema": "AcademicPeriod",
+      "description": "Academic periods (year and semester metadata)"
+    },
+    "/periods/{periodKey}/students/{studentId}": {
+      "schema": "Student",
+      "description": "Student roster documents organized by academic period"
+    },
+    "/periods/{periodKey}/screenings_9s/{studentId}": {
+      "schema": "Assessment9S",
+      "description": "School Health HERO 9S screening assessments by student and period"
+    },
+    "/periods/{periodKey}/assessments_sdq/{studentId}": {
+      "schema": "AssessmentSDQ",
+      "description": "Strengths and Difficulties Questionnaire (SDQ) evaluations by student and period"
+    }
+  }
+}

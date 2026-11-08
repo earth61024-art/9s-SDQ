@@ -1,0 +1,6 @@
+{
+  "name": "WMA CARE - Wat Mai Amataros Student Care",
+  "description": "ระบบดูแลสุขภาวะและพัฒนาการนักเรียน โรงเรียนวัดใหม่อมตรส ระบบคัดกรอง 9S และแบบประเมิน SDQ",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

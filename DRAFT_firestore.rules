@@ -1,0 +1,155 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Catch-all default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.email == 'earth61024@gmail.com');
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'earth61024@gmail.com'
+      );
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidPeriodKey(key) {
+      return key is string && key.size() >= 6 && key.size() <= 16 && key.matches('^[0-9]{4}_[1-2]$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entity Validation Helpers
+    function isValidAdminDoc(data) {
+      return data.email is string && data.email.size() <= 256 &&
+             data.role == 'admin';
+    }
+
+    function isValidUserProfile(data) {
+      return data.uid is string && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() <= 256 &&
+             (data.role == 'teacher' || data.role == 'admin') &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 200));
+    }
+
+    function isValidAcademicPeriod(data, periodKey) {
+      return data.periodKey == periodKey &&
+             data.academicYear is string && data.academicYear.size() <= 8 &&
+             (data.semester == '1' || data.semester == '2');
+    }
+
+    function isValidStudent(data, periodKey) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.periodKey == periodKey &&
+             data.studentCode is string && data.studentCode.size() <= 32 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             (data.classroom in ['ป.1', 'ป.2', 'ป.3', 'ป.4', 'ป.5', 'ป.6']) &&
+             (!('orderNo' in data) || (data.orderNo is number)) &&
+             (!('nationalId' in data) || (data.nationalId is string && data.nationalId.size() <= 32)) &&
+             (!('birthdate' in data) || (data.birthdate is string && data.birthdate.size() <= 64)) &&
+             (!('gender' in data) || (data.gender in ['ชาย', 'หญิง']));
+    }
+
+    function isValid9S(data, periodKey, studentId) {
+      return data.studentId == studentId &&
+             data.periodKey == periodKey &&
+             data.assessmentDate is string && data.assessmentDate.size() <= 16 &&
+             data.overallPositive is bool &&
+             data.behavioralPositive is bool &&
+             data.emotionalPositive is bool &&
+             data.socialPositive is bool &&
+             (!('assessorName' in data) || (data.assessorName is string && data.assessorName.size() <= 200)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000));
+    }
+
+    function isValidSDQ(data, periodKey, studentId) {
+      return data.studentId == studentId &&
+             data.periodKey == periodKey &&
+             (data.assessorType in ['teacher', 'student', 'parent']) &&
+             (data.totalDifficulties is number && data.totalDifficulties >= 0 && data.totalDifficulties <= 40) &&
+             (data.totalStatus in ['normal', 'risk', 'problem']) &&
+             (data.prosocialStatus in ['strength', 'no_strength']) &&
+             (!('emotionalScore' in data) || (data.emotionalScore is number && data.emotionalScore >= 0 && data.emotionalScore <= 10)) &&
+             (!('conductScore' in data) || (data.conductScore is number && data.conductScore >= 0 && data.conductScore <= 10)) &&
+             (!('hyperactivityScore' in data) || (data.hyperactivityScore is number && data.hyperactivityScore >= 0 && data.hyperactivityScore <= 10)) &&
+             (!('peerScore' in data) || (data.peerScore is number && data.peerScore >= 0 && data.peerScore <= 10)) &&
+             (!('prosocialScore' in data) || (data.prosocialScore is number && data.prosocialScore >= 0 && data.prosocialScore <= 10)) &&
+             (!('assessmentDate' in data) || (data.assessmentDate is string && data.assessmentDate.size() <= 16)) &&
+             (!('assessorName' in data) || (data.assessorName is string && data.assessorName.size() <= 200));
+    }
+
+    // Admins Collection
+    match /admins/{userId} {
+      allow get: if isVerifiedUser();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin() && isValidId(userId) && isValidAdminDoc(incoming());
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isVerifiedUser();
+      allow list: if isAdmin();
+      allow create: if isVerifiedUser() && isValidId(userId) && (isOwner(userId) || isAdmin()) && isValidUserProfile(incoming());
+      allow update: if isVerifiedUser() && isValidId(userId) && (isOwner(userId) || isAdmin()) && isValidUserProfile(incoming());
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // Academic Periods
+    match /periods/{periodKey} {
+      allow get, list: if isVerifiedUser();
+      allow create, update: if isVerifiedUser() && isValidPeriodKey(periodKey) && isValidAcademicPeriod(incoming(), periodKey);
+      allow delete: if isAdmin() && isValidPeriodKey(periodKey);
+
+      // Student Roster subcollection
+      match /students/{studentId} {
+        allow get, list: if isVerifiedUser();
+        allow create, update: if isVerifiedUser() && isValidPeriodKey(periodKey) && isValidId(studentId) && isValidStudent(incoming(), periodKey);
+        allow delete: if isVerifiedUser() && isValidPeriodKey(periodKey) && isValidId(studentId);
+      }
+
+      // 9S Screenings subcollection
+      match /screenings_9s/{studentId} {
+        allow get, list: if isVerifiedUser();
+        allow create, update: if isVerifiedUser() && isValidPeriodKey(periodKey) && isValidId(studentId) && isValid9S(incoming(), periodKey, studentId);
+        allow delete: if isVerifiedUser() && isValidPeriodKey(periodKey) && isValidId(studentId);
+      }
+
+      // SDQ Assessments subcollection
+      match /assessments_sdq/{studentId} {
+        allow get, list: if isVerifiedUser();
+        allow create, update: if isVerifiedUser() && isValidPeriodKey(periodKey) && isValidId(studentId) && isValidSDQ(incoming(), periodKey, studentId);
+        allow delete: if isVerifiedUser() && isValidPeriodKey(periodKey) && isValidId(studentId);
+      }
+    }
+
+    // Connection test document
+    match /test/{docId} {
+      allow get: if isVerifiedUser();
+      allow write: if isAdmin();
+    }
+  }
+}
