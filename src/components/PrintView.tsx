@@ -42,7 +42,7 @@ export const PrintView: React.FC<PrintViewProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex flex-col items-center justify-start overflow-y-auto p-4 sm:p-6 print:p-0 print:bg-white print:fixed-none">
+    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex flex-col items-center justify-start overflow-y-auto p-4 sm:p-6 print:static print:block print:overflow-visible print:h-auto print:w-full print:p-0 print:bg-white print:backdrop-blur-none">
       {/* Non-printable action bar */}
       <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg p-3.5 mb-4 flex items-center justify-between print:hidden border border-slate-200">
         <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export const PrintView: React.FC<PrintViewProps> = ({
       </div>
 
       {/* Printable Sheet (White A4 page style) */}
-      <div className="w-full max-w-[210mm] min-h-[297mm] bg-white text-slate-900 p-8 sm:p-12 shadow-2xl rounded-sm print:shadow-none print:m-0 print:p-6 print:w-full print:max-w-none text-[12px] leading-relaxed font-sans">
+      <div className="w-full max-w-[210mm] min-h-[297mm] bg-white text-slate-900 p-8 sm:p-12 shadow-2xl rounded-sm print:shadow-none print:rounded-none print:m-0 print:p-2 print:min-h-0 print:w-full print:max-w-none text-[12px] leading-relaxed font-sans">
         {/* ==================================================== */}
         {/* Mode 1: แบบสังเกตอาการ 9S รายบุคคล (Official 9S Form) */}
         {/* ==================================================== */}

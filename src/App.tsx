@@ -564,185 +564,210 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-teal-500 selection:text-white">
-      {/* Top Navbar */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        academicYear={academicYear}
-        setAcademicYear={setAcademicYear}
-        availableYears={availableYears}
-        onAddYear={handleAddYear}
-        semester={semester}
-        setSemester={setSemester}
-        currentUser={currentUser}
-        onOpenAuthModal={() => setIsAuthModalOpen(true)}
-        onSignOut={handleSignOutGoogle}
-        isLoggingIn={isLoggingIn}
-        onOpenImportModal={() => setIsImportModalOpen(true)}
-      />
+    <>
+      <div
+        className={`min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-teal-500 selection:text-white ${
+          printState.isOpen ? 'print:hidden' : ''
+        }`}
+      >
+        {/* Top Navbar */}
+        <Navbar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          academicYear={academicYear}
+          setAcademicYear={setAcademicYear}
+          availableYears={availableYears}
+          onAddYear={handleAddYear}
+          semester={semester}
+          setSemester={setSemester}
+          currentUser={currentUser}
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          onSignOut={handleSignOutGoogle}
+          isLoggingIn={isLoggingIn}
+          onOpenImportModal={() => setIsImportModalOpen(true)}
+        />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            academicYear={academicYear}
-            semester={semester}
-            students={currentStudents}
-            screenings9S={current9SScreenings}
-            assessmentsSDQ={currentSDQAssessments}
-            onSelectClassroom={(cls) => {
-              setSelectedClassroom(cls);
-              setActiveTab('9s');
-            }}
-            onOpen9S={(student) => {
-              setActiveStudent9S(student);
-              setIs9SModalOpen(true);
-            }}
-            onOpenSDQ={(student) => {
-              setActiveStudentSDQ(student);
-              setIsSDQModalOpen(true);
-            }}
-            onPrintSchoolSummary={handlePrintSchoolSummary}
-            onOpenImportModal={() => setIsImportModalOpen(true)}
-            currentUser={currentUser}
-            onOpenAuthModal={() => setIsAuthModalOpen(true)}
-          />
-        )}
+        {/* Main Content Area */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              academicYear={academicYear}
+              semester={semester}
+              students={currentStudents}
+              screenings9S={current9SScreenings}
+              assessmentsSDQ={currentSDQAssessments}
+              onSelectClassroom={(cls) => {
+                setSelectedClassroom(cls);
+                setActiveTab('9s');
+              }}
+              onOpen9S={(student) => {
+                setActiveStudent9S(student);
+                setIs9SModalOpen(true);
+              }}
+              onOpenSDQ={(student) => {
+                setActiveStudentSDQ(student);
+                setIsSDQModalOpen(true);
+              }}
+              onPrintSchoolSummary={handlePrintSchoolSummary}
+              onOpenImportModal={() => setIsImportModalOpen(true)}
+              currentUser={currentUser}
+              onOpenAuthModal={() => setIsAuthModalOpen(true)}
+            />
+          )}
 
-        {(activeTab === '9s' || activeTab === 'sdq' || activeTab === 'students') && (
-          <ClassroomView
-            viewType={activeTab}
-            academicYear={academicYear}
-            semester={semester}
-            students={currentStudents}
-            screenings9S={current9SScreenings}
-            assessmentsSDQ={currentSDQAssessments}
-            selectedClassroom={selectedClassroom}
-            setSelectedClassroom={setSelectedClassroom}
-            onOpen9SModal={(student) => {
-              setActiveStudent9S(student);
-              setIs9SModalOpen(true);
-            }}
-            onOpenSDQModal={(student) => {
-              setActiveStudentSDQ(student);
-              setIsSDQModalOpen(true);
-            }}
-            onOpenStudentModal={(student) => {
-              setEditingStudent(student || null);
-              setIsStudentModalOpen(true);
-            }}
-            onDeleteStudent={handleDeleteStudent}
-            onPrint9S={handlePrintIndividual9S}
-            onPrintSDQ={handlePrintIndividualSDQ}
-            onPrintClassroomSummary={handlePrintClassroomSummary}
-            onOpenImportModal={() => setIsImportModalOpen(true)}
-          />
-        )}
+          {(activeTab === '9s' || activeTab === 'sdq' || activeTab === 'students') && (
+            <ClassroomView
+              viewType={activeTab}
+              academicYear={academicYear}
+              semester={semester}
+              students={currentStudents}
+              screenings9S={current9SScreenings}
+              assessmentsSDQ={currentSDQAssessments}
+              selectedClassroom={selectedClassroom}
+              setSelectedClassroom={setSelectedClassroom}
+              onOpen9SModal={(student) => {
+                setActiveStudent9S(student);
+                setIs9SModalOpen(true);
+              }}
+              onOpenSDQModal={(student) => {
+                setActiveStudentSDQ(student);
+                setIsSDQModalOpen(true);
+              }}
+              onOpenStudentModal={(student) => {
+                setEditingStudent(student || null);
+                setIsStudentModalOpen(true);
+              }}
+              onDeleteStudent={handleDeleteStudent}
+              onPrint9S={handlePrintIndividual9S}
+              onPrintSDQ={handlePrintIndividualSDQ}
+              onPrintClassroomSummary={handlePrintClassroomSummary}
+              onOpenImportModal={() => setIsImportModalOpen(true)}
+            />
+          )}
 
-        {activeTab === 'reports' && (
-          <ReportsView
-            academicYear={academicYear}
-            semester={semester}
-            students={currentStudents}
-            screenings9S={current9SScreenings}
-            assessmentsSDQ={currentSDQAssessments}
-            currentUser={currentUser}
-            onSignInWithGoogle={handleSignInGoogle}
-            onOpenAuthModal={() => setIsAuthModalOpen(true)}
-            onPrintClassroom={handlePrintClassroomSummary}
-            onPrintSchoolSummary={handlePrintSchoolSummary}
-            onConfirmModal={(opts) => {
-              setConfirmationModal({
-                isOpen: true,
-                title: opts.title,
-                message: opts.message,
-                variant: opts.variant || 'primary',
-                onConfirm: () => {
-                  opts.onConfirm();
-                  setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
-                },
-              });
-            }}
-          />
-        )}
-      </main>
+          {activeTab === 'reports' && (
+            <ReportsView
+              academicYear={academicYear}
+              semester={semester}
+              students={currentStudents}
+              screenings9S={current9SScreenings}
+              assessmentsSDQ={currentSDQAssessments}
+              currentUser={currentUser}
+              onSignInWithGoogle={handleSignInGoogle}
+              onOpenAuthModal={() => setIsAuthModalOpen(true)}
+              onPrintClassroom={handlePrintClassroomSummary}
+              onPrintSchoolSummary={handlePrintSchoolSummary}
+              onConfirmModal={(opts) => {
+                setConfirmationModal({
+                  isOpen: true,
+                  title: opts.title,
+                  message: opts.message,
+                  variant: opts.variant || 'primary',
+                  onConfirm: () => {
+                    opts.onConfirm();
+                    setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+                  },
+                });
+              }}
+            />
+          )}
+        </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500 print:hidden">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div>
-            <span className="font-semibold text-slate-700">WMA CARE</span> — ระบบดูแลสุขภาวะและพัฒนาการนักเรียน โรงเรียนวัดใหม่อมตรส (School Health HERO & SDQ)
+        {/* Footer */}
+        <footer className="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500 print:hidden">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>
+              <span className="font-semibold text-slate-700">WMA CARE</span> — ระบบดูแลสุขภาวะและพัฒนาการนักเรียน โรงเรียนวัดใหม่อมตรส (School Health HERO & SDQ)
+            </div>
+            <div>
+              ปีการศึกษา {academicYear} (ภาคเรียนที่ {semester}) • พร้อมใช้งาน Google Workspace
+            </div>
           </div>
-          <div>
-            ปีการศึกษา {academicYear} (ภาคเรียนที่ {semester}) • พร้อมใช้งาน Google Workspace
-          </div>
-        </div>
-      </footer>
+        </footer>
 
-      {/* Student Add/Edit Modal */}
-      <StudentModal
-        isOpen={isStudentModalOpen}
-        student={editingStudent}
-        defaultClassroom={selectedClassroom === 'all' ? 'ป.1' : selectedClassroom}
-        currentAcademicYear={academicYear}
-        currentSemester={semester}
-        onClose={() => {
-          setIsStudentModalOpen(false);
-          setEditingStudent(null);
-        }}
-        onSave={handleSaveStudent}
-      />
+        {/* Student Add/Edit Modal */}
+        <StudentModal
+          isOpen={isStudentModalOpen}
+          student={editingStudent}
+          defaultClassroom={selectedClassroom === 'all' ? 'ป.1' : selectedClassroom}
+          currentAcademicYear={academicYear}
+          currentSemester={semester}
+          onClose={() => {
+            setIsStudentModalOpen(false);
+            setEditingStudent(null);
+          }}
+          onSave={handleSaveStudent}
+        />
 
-      {/* Import / Promote Students Modal */}
-      <ImportStudentsModal
-        isOpen={isImportModalOpen}
-        currentAcademicYear={academicYear}
-        currentSemester={semester}
-        availableYears={availableYears}
-        existingStudentsCurrentPeriod={currentStudents}
-        allStudentsByPeriod={allStudentsByPeriod}
-        onClose={() => setIsImportModalOpen(false)}
-        onImportComplete={handleImportComplete}
-      />
+        {/* Import / Promote Students Modal */}
+        <ImportStudentsModal
+          isOpen={isImportModalOpen}
+          currentAcademicYear={academicYear}
+          currentSemester={semester}
+          availableYears={availableYears}
+          existingStudentsCurrentPeriod={currentStudents}
+          allStudentsByPeriod={allStudentsByPeriod}
+          onClose={() => setIsImportModalOpen(false)}
+          onImportComplete={handleImportComplete}
+        />
 
-      {/* 9S Screening Modal */}
-      <Screening9SModal
-        isOpen={is9SModalOpen}
-        student={activeStudent9S}
-        assessment={activeStudent9S ? current9SScreenings[activeStudent9S.id] : null}
-        currentAcademicYear={academicYear}
-        currentSemester={semester}
-        onClose={() => {
-          setIs9SModalOpen(false);
-          setActiveStudent9S(null);
-        }}
-        onSave={handleSave9S}
-        onProceedToSDQ={(student) => {
-          setIs9SModalOpen(false);
-          setActiveStudent9S(null);
-          setActiveStudentSDQ(student);
-          setIsSDQModalOpen(true);
-        }}
-        onPrint={handlePrintIndividual9S}
-      />
+        {/* 9S Screening Modal */}
+        <Screening9SModal
+          isOpen={is9SModalOpen}
+          student={activeStudent9S}
+          assessment={activeStudent9S ? current9SScreenings[activeStudent9S.id] : null}
+          currentAcademicYear={academicYear}
+          currentSemester={semester}
+          onClose={() => {
+            setIs9SModalOpen(false);
+            setActiveStudent9S(null);
+          }}
+          onSave={handleSave9S}
+          onProceedToSDQ={(student) => {
+            setIs9SModalOpen(false);
+            setActiveStudent9S(null);
+            setActiveStudentSDQ(student);
+            setIsSDQModalOpen(true);
+          }}
+          onPrint={handlePrintIndividual9S}
+        />
 
-      {/* SDQ Assessment Modal */}
-      <SDQModal
-        isOpen={isSDQModalOpen}
-        student={activeStudentSDQ}
-        assessment={activeStudentSDQ ? currentSDQAssessments[activeStudentSDQ.id] : null}
-        currentAcademicYear={academicYear}
-        currentSemester={semester}
-        onClose={() => {
-          setIsSDQModalOpen(false);
-          setActiveStudentSDQ(null);
-        }}
-        onSave={handleSaveSDQ}
-        onPrint={handlePrintIndividualSDQ}
-      />
+        {/* SDQ Assessment Modal */}
+        <SDQModal
+          isOpen={isSDQModalOpen}
+          student={activeStudentSDQ}
+          assessment={activeStudentSDQ ? currentSDQAssessments[activeStudentSDQ.id] : null}
+          currentAcademicYear={academicYear}
+          currentSemester={semester}
+          onClose={() => {
+            setIsSDQModalOpen(false);
+            setActiveStudentSDQ(null);
+          }}
+          onSave={handleSaveSDQ}
+          onPrint={handlePrintIndividualSDQ}
+        />
 
-      {/* Print View Preview Modal */}
+        {/* Authentication Modal */}
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          onGoogleSignIn={handleSignInGoogle}
+          onEmailSignIn={handleEmailSignIn}
+          isLoggingIn={isLoggingIn}
+        />
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          title={confirmationModal.title}
+          message={confirmationModal.message}
+          variant={confirmationModal.variant}
+          onConfirm={confirmationModal.onConfirm}
+          onCancel={() => setConfirmationModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      </div>
+
+      {/* Print View Preview Modal (Isolated from website shell on print) */}
       {printState.isOpen && (
         <PrintView
           mode={printState.mode}
@@ -762,25 +787,6 @@ export default function App() {
           onClose={() => setPrintState((prev) => ({ ...prev, isOpen: false }))}
         />
       )}
-
-      {/* Authentication Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onGoogleSignIn={handleSignInGoogle}
-        onEmailSignIn={handleEmailSignIn}
-        isLoggingIn={isLoggingIn}
-      />
-
-      {/* Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={confirmationModal.isOpen}
-        title={confirmationModal.title}
-        message={confirmationModal.message}
-        variant={confirmationModal.variant}
-        onConfirm={confirmationModal.onConfirm}
-        onCancel={() => setConfirmationModal((prev) => ({ ...prev, isOpen: false }))}
-      />
-    </div>
+    </>
   );
 }
